@@ -1,0 +1,30 @@
+version: '3'
+services:
+  nexus:
+    image: sonatype/nexus3
+    ports:
+    - 8081:8081
+    #volumes:
+    #- ./data/nexus:/
+  sonar:
+    image: sonarqube
+    ports:
+    - 9000:9000
+    - 9092:9092
+  jenkins:
+    image: jenkinsci/blueocean
+    privileged: true
+    user: root
+    ports:
+    - 8080:8080
+    - 50000:50000
+    volumes:
+    - ./data/jenkins:/var/jenkins_home #Remember that, the tmp directory is designed to be wiped on system reboot.
+    - /var/run/docker.sock:/var/run/docker.sock
+  gogs:
+    image: gogs/gogs
+    ports:
+    - 10022:22 
+    - 10080:3000
+    volumes:
+    - ./data/gogs:/data
