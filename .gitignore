@@ -1,1 +1,4 @@
-data/
+#data/
+data/jenkins
+data/gitea/git*
+data/gitea/ssh
