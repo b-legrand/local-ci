@@ -1,4 +1,7 @@
 #data/
 data/jenkins
 data/gitea/git*
+data/gitea/avatars
 data/gitea/ssh
+data/gitea/log
+data/gitea/indexers

@@ -2,19 +2,162 @@
 
 <head>
     <title>Local</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Inconsolata|Noto+Sans"
+          rel="stylesheet">
+    <script defer
+            src="https://use.fontawesome.com/releases/v5.6.3/js/all.js"
+            integrity="sha384-EIHISlAOj4zgYieurP0SdoiBYfGJKkgWedPHH4jCzpCXLmzVsw1ouK59MuUtP4a1"
+            crossorigin="anonymous"></script>
+    <script>
+
+    </script>
+    <style>
+        body {
+            background: #333;
+            color: #aaa;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        p,
+        a,
+        div {
+            font-family: 'Inconsolata', monospace;
+        }
+
+        a {
+            color: #ccc;
+        }
+
+        a:hover {
+            color: white;
+        }
+
+        nav {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .balls {
+            display: flex;
+            flex-direction: row;
+            margin: 0 auto;
+        }
+
+        .ball {
+            list-style-type: none;
+        }
+
+        .ball a {
+            width: 2em;
+            height: 2em;
+            padding: .25em;
+            font-size: 2rem;
+            background: #222;
+            border-radius: 1.5em;
+            border: solid 2px currentColor;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            transition: all ease-in-out .3s;
+            margin-right: .5em;
+        }
+
+        .ball .text {
+            font-size: .75rem;
+            margin-top: .25em;
+        }
+
+        .ball a:hover,
+        .ball a:focus {
+            border-radius: 0 1.5em 1.5em 1.5em;
+            outline: none;
+        }
+
+        .ball:nth-child(1) a:hover,
+        .ball:nth-child(1) a:focus {
+            color: #5BC176;
+        }
+
+        .ball:nth-child(2) a:hover,
+        .ball:nth-child(2) a:focus {
+            color: #4E92A2;
+        }
+
+        .ball:nth-child(3) a:hover,
+        .ball:nth-child(3) a:focus {
+            color: #FFBB78;
+        }
+
+        .ball:nth-child(4) a:hover,
+        .ball:nth-child(4) a:focus {
+            color: #FF8778;
+        }
+
+        .ball:nth-child(5) a:hover,
+        .ball:nth-child(5) a:focus {
+            color: #D6659A;
+        }
+
+    </style>
 </head>
 
 <body>
     <nav>
-        <ul>
-            <li>
-                <a href="http://gitea.local/">
-                    Gitea
+        <h1>
+            pic.local, a local continuous integration platform
+        </h1>
+        <ul class="balls">
+            <li class="ball">
+                <a href="http://gitea.local/"
+                   title="Gitea, git repositories hosting">
+                    <i class="fab fa-git"></i>
+                    <span class="text">Gitea</span>
                 </a>
             </li>
-            <li>
-                <a href="http://jenkins.local/">
-                    Jenkins
+            <li class="ball">
+                <a href="http://jenkins.local/blue"
+                   title="Jenkins, main pipeline/task runner">
+                    <i class="fab fa-jenkins"></i>
+                    <span class="text">Jenkins</span>
+                </a>
+            </li>
+            <li class="ball">
+                <a href="http://adminer.local/"
+                   title="Adminer, a simple UI to manage postgres db">
+                    <i class="fas fa-database"></i>
+                    <span class="text">Adminer</span>
+                </a>
+            </li>
+            <li class="ball">
+                <a href="http://sonar.local/"
+                   title="SonarQube, a static code analysis quality aggregator">
+                    <i class="fas fa-bug"></i>
+                    <span class="text">SonarQube</span>
+                </a>
+            </li>
+            <li class="ball">
+                <a href="http://verdaccio.local/"
+                   title="Verdaccio, a npm repository for javascript packages.">
+                    <i class="fas fa-box-open"></i>
+                    <span class="text">Verdaccio</span>
+                </a>
+            </li>
+            <li class="ball">
+                <a href="http://portainer.local/"
+                   title="portainer, manages docker containers etc..">
+                    <i class="fab fa-docker"></i>
+                    <span class="text">
+                        Portainer
+                    </span>
                 </a>
             </li>
         </ul>
