@@ -25,11 +25,11 @@ services:
   sonar:
     image: sonarqube
     ports:
-      - 9000:9000
+      - 9001:9000
       - 9092:9092
     environment:
       - VIRTUAL_HOST=sonar.local
-      - VIRTUAL_PORT=9000
+      - VIRTUAL_PORT=9001
       - sonar.jdbc.username=sonarqube
       - sonar.jdbc.password=sonarqube
       - sonar.jdbc.url=jdbc:postgresql://postgres:5432/sonarqube 
