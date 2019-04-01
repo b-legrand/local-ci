@@ -1,6 +1,16 @@
-# @hermes/pic
+# @b-legrand/local-pic
 
 Local pic to test Jenkinsfiles.
+
+This is a small continuous integration platform based on gitea + jenkins + sonarqube + nexus
+
+## How to Install
+
+### 1.Clone repo
+
+    git clone
+
+### 2. edit local config
 
 Edit your /etc/hosts file::
 
@@ -11,6 +21,13 @@ Edit your /etc/hosts file::
     127.0.0.1 gitea.local
     127.0.0.1 adminer.local
 
+### 3. start docker
+
+    docker-compose up -d
+    docker-compose logs -f
+
+### 4. ...
+### 5. profit ?
 
 ## Usage
 

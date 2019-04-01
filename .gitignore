@@ -5,3 +5,5 @@ data/gitea/avatars
 data/gitea/ssh
 data/gitea/log
 data/gitea/indexers
+data/gitea/lfs
+data/gitea/sessions
