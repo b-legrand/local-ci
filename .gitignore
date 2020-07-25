@@ -11,4 +11,6 @@ data/sonar/data
 data/sonar/extensions
 logs/*.log
 
+apps/drone/data
+apps/gitea/data
 data/sonar/logs

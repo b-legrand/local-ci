@@ -1,4 +1,5 @@
-version: "3"
+version: '2'
+
 services:
   #
   # Nexus : code artifact and docker images repository
@@ -9,19 +10,65 @@ services:
   #    - "8081:8081"
   #  environment:
   #    - VIRTUAL_HOST=nexus.local
-  #  depends_on:
-  #    - nginx
+  
 
-  verdaccio:
-    image: verdaccio/verdaccio:latest
-    ports:
-      - "4873:4873"
+  elasticsearch:
+    build:
+      context: ./apps/elasticsearch/
     volumes:
-      - bin-data:/verdaccio
+      - ./apps/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9300:9300"
     environment:
-      - VIRTUAL_HOST=verdaccio.local
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
+
+  logstash:
+    build:
+      context: ./apps/logstash/
+    volumes:
+      - ./apps/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./apps/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - "5000:5000"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
     depends_on:
-      - nginx
+      - elasticsearch
+
+  kibana:
+    build:
+      context: ./apps/kibana/
+    volumes:
+      - ./apps/kibana/config/:/usr/share/kibana/config:ro
+    ports:
+      - "5601:5601"
+    environment: 
+      - VIRTUAL_HOST=super.local
+      - VIRTUAL_PORT=5601
+    networks:
+      - elk
+      - public
+    depends_on:
+      - elasticsearch
+      - apm
+      - nginx-proxy
+
+  apm:
+    build:
+      context: ./apps/apm/
+    volumes:
+      - ./apps/apm/config/:/usr/share/apm/config:ro
+    ports:
+      - "8200:8200"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
 
   #
   # Sonar : static code analysis
@@ -45,56 +92,58 @@ services:
       - ./data/sonar/extensions:/opt/sonarqube/extensions
       - ./data/sonar/data:/opt/sonarqube/data
 
-  #
-  # Jenkins: Continuous Integration Platform
-  #
-  jenkins:
-    image: jenkinsci/blueocean
-    privileged: true
-    user: root
-    ports:
-      - 8080:8080
-      - 50000:50000
-    environment:
-      - VIRTUAL_HOST=jenkins.local
-      - VIRTUAL_PORT=8080
-    depends_on:
-      - nginx
-    volumes:
-      - jenkins-data:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-  #
-  # Gitea : git source code repository
-  #
   gitea:
-    image: gitea/gitea
-    volumes:
-      - ./data/gitea:/data/gitea
-      - ssh-data:/data/ssh
-      - ./data/gitea/git:/data/git
-    ports:
-      - "8082:3000"
-      - "222:22"
-    depends_on:
-      - postgres
-      - nginx
-    restart: always
-    privileged: true
+    image: gitea/gitea:latest
     environment:
-      - VIRTUAL_HOST=gitea.local
-      - VIRTUAL_PORT=3000
-      - SSH_HOST=gitea.local
-      - SSH_PORT=222
-      - HOST=gitea.local
       - USER_UID=1000
       - USER_GID=1000
-      - DB_TYPE=postgres
-      - DB_HOST=postgres:5432
-      - DB_NAME=gitea
-      - DB_USER=gitea
-      - DB_PASSWD=gitea
-    links:
+      - ROOT_URL=http://gitea.local
+      - VIRTUAL_HOST=gitea.local,git.local
+      - VIRTUAL_PORT=3000,222
+    restart: always
+    depends_on:
       - postgres
+      - nginx-proxy
+    volumes:
+      - ./gitea/data:/data
+    ports:
+      - "3000:3000"
+      - "222:22"
+
+  drone-server:
+    image: drone/drone:1  
+    ports:
+      - 8000
+      - 9000
+    volumes:
+      - ./apps/drone/data:/var/lib/drone/
+    restart: always
+    depends_on:
+      - nginx-proxy
+      - gitea
+    environment:
+      - DRONE_OPEN=true
+      - DRONE_HOST=http://drone.local
+      - DRONE_GITEA=true
+      - DRONE_GITEA_URL=http://gitea.local
+      - DRONE_SECRET=secret
+      - DRONE_NETWORK=gitea_default
+      - VIRTUAL_HOST=drone.local
+      - VIRTUAL_PORT=8000
+
+  drone-agent:
+    image: drone/agent:0.8
+    command: agent
+    restart: always
+    depends_on:
+      - drone-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_SERVER=drone.local
+      - DRONE_SECRET=secret
+      - VIRTUAL_HOST=drone.local
+      - VIRTUAL_PORT=9000
 
   #
   # Postgres database
@@ -107,6 +156,7 @@ services:
     volumes:
       - ./data/pg/data:/var/lib/postgresql/data
       - ./data/pg/entrypoint:/docker-entrypoint-initdb.d
+
   #
   # DB admin interface
   #
@@ -120,33 +170,52 @@ services:
     depends_on:
       - postgres
       - nginx
+
   #
   # reverse proxy
   #
-  nginx:
+  nginx-proxy:
     image: jwilder/nginx-proxy
     ports:
       - "80:80"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
+
   #
-  # static home page
+  # drupal
   #
+  drupal:
+    image: drupal:8.9.2-fpm
+    environment:
+    - VIRTUAL_HOST=drupal.local
+    - VIRTUAL_PORT=9000
+    depends_on: 
+      - nginx-proxy
+
+  #
+  # lighthouse ci
+  #
+  light:
+    image: patrickhulce/lhci-server
+    ports:
+      - '9001:9001'
+    volumes:
+      - ./apps/data/lhci:/data
+    environment:
+      - VIRTUAL_HOST=light.local
+      - VIRTUAL_PORT=9001
+    depends_on: 
+      - nginx-proxy
+
   www:
     image: nginx
-    volumes:
-      - ./data/www/:/usr/share/nginx/html
+    volumes: 
+      - ./apps/home/:/usr/share/nginx/html
     environment:
-      - VIRTUAL_HOST=www.local
-    depends_on:
-      - nginx
+      - VIRTUAL_HOST=home.local
 
-volumes:
-  pg-data:
-    driver: local
-  ssh-data:
-    driver: local
-  jenkins-data:
-    driver: local
-  bin-data:
-    driver: local
+networks:
+
+  elk:
+    driver: bridge
+  public:
