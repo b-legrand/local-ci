@@ -1,16 +1,27 @@
-version: '2'
+version: "2"
 
 services:
   #
   # Nexus : code artifact and docker images repository
   #
-  #nexus:
-  #  image: sonatype/nexus3
-  #  ports:
-  #    - "8081:8081"
-  #  environment:
-  #    - VIRTUAL_HOST=nexus.local
+  nexus:
+    image: sonatype/nexus3
+    ports:
+      - "8081:8081"
+    environment:
+      - VIRTUAL_HOST=nexus.local
+    depends_on: 
+      - nginx-proxy
   
+  sonar:
+    image: sonarqube:lts
+    ports:
+      - "9000:9000"
+    environment:
+      - VIRTUAL_HOST=sonar.local
+      - VIRTUAL_PORT=9000
+    depends_on: 
+      - nginx-proxy
 
   elasticsearch:
     build:
@@ -47,7 +58,7 @@ services:
       - ./apps/kibana/config/:/usr/share/kibana/config:ro
     ports:
       - "5601:5601"
-    environment: 
+    environment:
       - VIRTUAL_HOST=super.local
       - VIRTUAL_PORT=5601
     networks:
@@ -55,10 +66,10 @@ services:
       - public
     depends_on:
       - elasticsearch
-      - apm
+      - apm-server
       - nginx-proxy
 
-  apm:
+  apm-server:
     build:
       context: ./apps/apm/
     volumes:
@@ -67,6 +78,7 @@ services:
       - "8200:8200"
     networks:
       - elk
+      - public
     depends_on:
       - elasticsearch
 
@@ -76,21 +88,20 @@ services:
       - USER_UID=1000
       - USER_GID=1000
       - ROOT_URL=http://gitea.local
-      - VIRTUAL_HOST=gitea.local,git.local
-      - VIRTUAL_PORT=3000,222
+      - VIRTUAL_HOST=gitea.local:3000,git.local:222
     restart: always
     depends_on:
       - nginx-proxy
     volumes:
-      - ./gitea/data:/data
+      - ./apps/gitea/data:/data
     ports:
       - "3000:3000"
       - "222:22"
 
   drone-server:
-    image: drone/drone:1  
+    image: drone/drone:1
     ports:
-      - 8000
+      - 8000:80
       - 9000
     volumes:
       - ./apps/drone/data:/var/lib/drone/
@@ -100,13 +111,17 @@ services:
       - gitea
     environment:
       - DRONE_OPEN=true
-      - DRONE_HOST=http://drone.local
+      - DRONE_SERVER_HOST=http://drone.local
       - DRONE_GITEA=true
-      - DRONE_GITEA_URL=http://gitea.local
+      - DRONE_GITEA_SERVER=http://gitea.local:3000
+      - DRONE_GITEA_SKIP_VERIFY=true
       - DRONE_SECRET=secret
-      - DRONE_NETWORK=gitea_default
+      - DRONE_NETWORK=public
       - VIRTUAL_HOST=drone.local
       - VIRTUAL_PORT=8000
+    networks:
+      - drone
+      - public
 
   drone-agent:
     image: drone/agent:0.8
@@ -117,10 +132,13 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - DRONE_SERVER=drone.local
+      - DRONE_SERVER=drone-server:8000
       - DRONE_SECRET=secret
-      - VIRTUAL_HOST=drone.local
-      - VIRTUAL_PORT=9000
+    networks:
+      - drone
+
+  oauth:
+    image: qlik/simple-oidc-provider
 
   nginx-proxy:
     image: jwilder/nginx-proxy
@@ -128,36 +146,59 @@ services:
       - "80:80"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-  
-  drupal:
-    image: drupal:8.9.2-fpm
-    environment:
-    - VIRTUAL_HOST=drupal.local
-    - VIRTUAL_PORT=9000
-    depends_on: 
-      - nginx-proxy
 
+  # lightouse reports server
+  # see this for lhci configuration https://github.com/GoogleChrome/lighthouse-ci/
   light:
     image: patrickhulce/lhci-server
     ports:
-      - '9001:9001'
+      - "9001:9001"
     volumes:
       - ./apps/data/lhci:/data
     environment:
       - VIRTUAL_HOST=light.local
       - VIRTUAL_PORT=9001
-    depends_on: 
+    depends_on:
       - nginx-proxy
 
+  # ldap database
+  #
   www:
-    image: nginx
-    volumes: 
-      - ./apps/home/:/usr/share/nginx/html
+    build: ./apps/apm-ssr/
+    user: node
+    ports:
+      - "4000:4000"
     environment:
       - VIRTUAL_HOST=home.local
+      - APM_SERVER=apm.local
+
+  # ldap database
+  #
+  whois:
+    image: osixia/openldap
+    volumes:
+      - ./apps/whois/config/:/usr/share/nginx
+    environment:
+      - VIRTUAL_HOST=whois.local
+
+  # oauth2 provider
+  # https://www.ory.sh/run-oauth2-server-open-source-api-security/
+  # 
+  hydra:
+    image: oryd/hydra:v1.4.2
+    environment:
+      - VIRTUAL_HOST=auth.local
+      - SECRETS_SYSTEM=${SECRETS_SYSTEM}
+      - DSN=$DSN
+      - URLS_SELF_ISSUER=http://127.0.0.1:9000/
+      - URLS_CONSENT=http://127.0.0.1:4200/consent
+      - URLS_LOGIN=http://127.0.0.1:9020/login
+    ports: 
+      - 7000:4444
+      - 7001:4445
 
 networks:
-
   elk:
     driver: bridge
   public:
+  drone:

@@ -1,0 +1,57 @@
+@mixin goo {
+  filter: url("#goo");
+}
+.menu-items {
+  @include goo();
+  padding:10px;
+  width: 60px;
+  position: absolute;
+  height: 100vh;
+}
+.menu-item {
+  @include goo();
+  cursor: pointer;
+  pointer-events: all;
+  width: 60px;
+  height: 60px;
+  position: absolute;
+  transform: translate3d(0, 0, 0);
+  border-radius: 50%;
+  background: black;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-shadow: 0 0 0 white;
+  ::ng-deep {
+    fa-icon {
+      margin: 6px;
+      stroke: white;
+    }
+  }
+  transition: ease-in .3s transform;
+  &.menu-item-0 {
+    z-index: 9001;
+  }
+  &:focus, &:active{
+    text-shadow: 0 0 1em white;
+  }
+}
+.menu-items.opened{
+  .menu-item-1{
+    transform: translate3d(0, 100%, 0);
+  }
+  .menu-item-2{
+    transform: translate3d(0, 200%, 0);
+  }
+  .menu-item-3{
+    transform: translate3d(0, 300%, 0);
+  }
+  .menu-item-4{
+    transform: translate3d(0, 400%, 0);
+  }
+  .menu-item-5{
+    transform: translate3d(0, 500%, 0);
+  }
+}

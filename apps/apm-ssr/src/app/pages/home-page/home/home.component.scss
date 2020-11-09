@@ -1,0 +1,7 @@
+:host{
+    display: flex;
+    flex-direction: vertical;
+    & > *{
+        flex: 0 0 auto;
+    }
+}
