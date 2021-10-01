@@ -29,7 +29,7 @@ services:
   sonar:
     image: sonarqube
     ports:
-      - 9001:9000
+      - 9000:9000
       - 9092:9092
     environment:
       - VIRTUAL_HOST=sonar.local
@@ -40,6 +40,8 @@ services:
     depends_on:
       - postgres
       - nginx
+    volumes:
+      - ./data/sonar/logs:/opt/sonarqube/logs/
   #
   # Jenkins: Continuous Integration Platform
   #

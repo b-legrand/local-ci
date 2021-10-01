@@ -21,6 +21,17 @@ Edit your /etc/hosts file::
     127.0.0.1 gitea.local
     127.0.0.1 adminer.local
 
+#### 2.bis requirement for images
+
+For sonarqube, execute the commands shown [here]( https://hub.docker.com/_/sonarqube/ ) as root on the host
+
+```sh
+sysctl -w vm.max_map_count=524288
+sysctl -w fs.file-max=131072
+ulimit -n 131072
+ulimit -u 8192
+```
+
 ### 3. start docker
 
     docker-compose up -d
