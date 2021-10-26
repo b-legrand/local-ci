@@ -7,6 +7,8 @@ data/gitea/log
 data/gitea/indexers
 data/gitea/lfs
 data/gitea/sessions
+data/sonar/data
+data/sonar/extensions
 logs/*.log
 
 data/sonar/logs

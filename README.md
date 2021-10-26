@@ -23,7 +23,12 @@ Edit your /etc/hosts file::
 
 #### 2.bis requirement for images
 
-For sonarqube, execute the commands shown [here]( https://hub.docker.com/_/sonarqube/ ) as root on the host
+If you encounter the following issue:
+```
+sonar_1      | bootstrap check failure [1] of [1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+```
+
+execute the commands shown [here]( https://hub.docker.com/_/sonarqube/ ) as root on the host
 
 ```sh
 sysctl -w vm.max_map_count=524288
