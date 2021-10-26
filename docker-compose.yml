@@ -33,7 +33,7 @@ services:
       - 9092:9092
     environment:
       - VIRTUAL_HOST=sonar.local
-      - VIRTUAL_PORT=9001
+      - VIRTUAL_PORT=9000
       - sonar.jdbc.username=sonarqube
       - sonar.jdbc.password=sonarqube
       - sonar.jdbc.url=jdbc:postgresql://postgres:5432/sonarqube
@@ -41,7 +41,10 @@ services:
       - postgres
       - nginx
     volumes:
-      - ./data/sonar/logs:/opt/sonarqube/logs/
+      - ./data/sonar/logs:/opt/sonarqube/logs
+      - ./data/sonar/extensions:/opt/sonarqube/extensions
+      - ./data/sonar/data:/opt/sonarqube/data
+
   #
   # Jenkins: Continuous Integration Platform
   #
@@ -102,7 +105,7 @@ services:
     environment:
       POSTGRES_PASSWORD: example
     volumes:
-      - pg-data:/var/lib/postgresql/data
+      - ./data/pg/data:/var/lib/postgresql/data
       - ./data/pg/entrypoint:/docker-entrypoint-initdb.d
   #
   # DB admin interface
