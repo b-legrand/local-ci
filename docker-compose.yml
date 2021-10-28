@@ -1,21 +1,30 @@
-version: '2'
+version: "2"
 
 services:
   #
   # Nexus : code artifact and docker images repository
   #
-  #nexus:
-  #  image: sonatype/nexus3
-  #  ports:
-  #    - "8081:8081"
-  #  environment:
-  #    - VIRTUAL_HOST=nexus.local
-  
+  nexus:
+    image: sonatype/nexus3
+    ports:
+      - "8081:8081"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nexus.rule=Host(`nexus.local`)"
+      - "traefik.http.routers.nexus.entrypoints=web"
+    depends_on: 
+      - traefik
 
   elasticsearch:
+    container_name: elasticsearch
     build:
       context: ./apps/elasticsearch/
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
       - ./apps/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
     ports:
       - "9200:9200"
@@ -26,9 +35,12 @@ services:
       - elk
 
   logstash:
+    container_name: logstash
     build:
       context: ./apps/logstash/
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
       - ./apps/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./apps/logstash/pipeline:/usr/share/logstash/pipeline:ro
     ports:
@@ -41,32 +53,44 @@ services:
       - elasticsearch
 
   kibana:
+    container_name: kibana
     build:
       context: ./apps/kibana/
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
       - ./apps/kibana/config/:/usr/share/kibana/config:ro
     ports:
       - "5601:5601"
-    environment: 
-      - VIRTUAL_HOST=super.local
-      - VIRTUAL_PORT=5601
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kibana.rule=Host(`super.local`)"
+      - "traefik.http.routers.kibana.entrypoints=web"
     networks:
       - elk
       - public
     depends_on:
       - elasticsearch
       - apm
-      - nginx-proxy
+      - traefik
 
   apm:
+    container_name: apm
     build:
       context: ./apps/apm/
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
       - ./apps/apm/config/:/usr/share/apm/config:ro
     ports:
       - "8200:8200"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.apm.rule=Host(`apm.local`)"
+      - "traefik.http.routers.apm.entrypoints=web"
     networks:
       - elk
+      - public
     depends_on:
       - elasticsearch
 
@@ -79,71 +103,120 @@ services:
       - 9000:9000
       - 9092:9092
     environment:
-      - VIRTUAL_HOST=sonar.local
-      - VIRTUAL_PORT=9000
       - sonar.jdbc.username=sonarqube
       - sonar.jdbc.password=sonarqube
       - sonar.jdbc.url=jdbc:postgresql://postgres:5432/sonarqube
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.apm.rule=Host(`sonar.local`)"
+      - "traefik.http.routers.apm.entrypoints=web"
     depends_on:
       - postgres
-      - nginx
+      - traefik
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
       - ./data/sonar/logs:/opt/sonarqube/logs
       - ./data/sonar/extensions:/opt/sonarqube/extensions
       - ./data/sonar/data:/opt/sonarqube/data
 
+  # 
+  # Gitea: git with a cup of tea
+  #
   gitea:
     image: gitea/gitea:latest
     environment:
       - USER_UID=1000
       - USER_GID=1000
       - ROOT_URL=http://gitea.local
-      - VIRTUAL_HOST=gitea.local,git.local
-      - VIRTUAL_PORT=3000,222
+      - SSH_DOMAIN=git.local
     restart: always
     depends_on:
       - postgres
-      - nginx-proxy
+      - traefik
     volumes:
-      - ./gitea/data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./data/gitea:/data
     ports:
       - "3000:3000"
       - "222:22"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gitea.rule=Host(`gitea.local`)"
+      - "traefik.http.routers.gitea.entrypoints=web"
+    networks:
+      - drone
+      - public
 
+  # 
+  # drone server
+  #
   drone-server:
-    image: drone/drone:1  
+    image: drone/drone
     ports:
-      - 8000
-      - 9000
+      - 8000:80
     volumes:
-      - ./apps/drone/data:/var/lib/drone/
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./data/drone:/var/lib/drone/
     restart: always
     depends_on:
-      - nginx-proxy
+      - traefik
       - gitea
     environment:
+      - DRONE_AGENTS_ENABLED=false
       - DRONE_OPEN=true
-      - DRONE_HOST=http://drone.local
+      - DRONE_SERVER_HOST=drone.local
+      - DRONE_SERVER_PROTO=http
       - DRONE_GITEA=true
-      - DRONE_GITEA_URL=http://gitea.local
+      - DRONE_GITEA_SERVER=http://gitea.local
+      - DRONE_GITEA_SKIP_VERIFY=true
       - DRONE_SECRET=secret
-      - DRONE_NETWORK=gitea_default
-      - VIRTUAL_HOST=drone.local
-      - VIRTUAL_PORT=8000
+      - DRONE_TLS_AUTOCERT=false
+      - DRONE_NETWORK=public
+      - DRONE_RPC_SECRET=secret
+      - DRONE_RUNNER_NETWORKS=drone
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.drone.rule=Host(`drone.local`)"
+      - "traefik.http.routers.drone.entrypoints=web"
+    networks:
+      - drone
+      - public
 
-  drone-agent:
-    image: drone/agent:0.8
+  # 
+  # drone runner
+  #
+  drone-runner:
+    image: drone/drone-runner-docker
     command: agent
     restart: always
     depends_on:
       - drone-server
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     environment:
-      - DRONE_SERVER=drone.local
-      - DRONE_SECRET=secret
-      - VIRTUAL_HOST=drone.local
-      - VIRTUAL_PORT=9000
+      - DRONE_RPC_HOST=drone-server
+      - DRONE_RPC_PROTO=http
+      - DRONE_RPC_SECRET=secret
+      - DRONE_RUNNER_NAME=drone-runner-docker
+      - DRONE_UI_USERNAME=test
+      - DRONE_UI_PASSWORD=test
+      - DRONE_RUNNER_NETWORKS=drone
+    networks:
+      - drone
+
+  # 
+  # oauth provider
+  #
+  oauth:
+    image: qlik/simple-oidc-provider
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
 
   #
   # Postgres database
@@ -154,6 +227,8 @@ services:
     environment:
       POSTGRES_PASSWORD: example
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
       - ./data/pg/data:/var/lib/postgresql/data
       - ./data/pg/entrypoint:/docker-entrypoint-initdb.d
 
@@ -166,56 +241,116 @@ services:
     ports:
       - 8083:8080
     environment:
-      - VIRTUAL_HOST=adminer.local
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lighthouse.rule=Host(`admin.local`)"
+      - "traefik.http.routers.lighthouse.entrypoints=web"
     depends_on:
       - postgres
-      - nginx
 
+  # 
+  # traefik reverse proxy
   #
-  # reverse proxy
-  #
-  nginx-proxy:
-    image: jwilder/nginx-proxy
+  traefik:
+    image: "traefik:v2.3"
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
     ports:
       - "80:80"
+      - "8080:8080"
     volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
 
   #
-  # drupal
+  # lightouse reports server
   #
-  drupal:
-    image: drupal:8.9.2-fpm
-    environment:
-    - VIRTUAL_HOST=drupal.local
-    - VIRTUAL_PORT=9000
-    depends_on: 
-      - nginx-proxy
-
-  #
-  # lighthouse ci
-  #
+  # see this for lhci configuration https://github.com/GoogleChrome/lighthouse-ci/
   light:
     image: patrickhulce/lhci-server
     ports:
-      - '9001:9001'
+      - "9003:9001"
     volumes:
-      - ./apps/data/lhci:/data
-    environment:
-      - VIRTUAL_HOST=light.local
-      - VIRTUAL_PORT=9001
-    depends_on: 
-      - nginx-proxy
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./data/lhci:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lighthouse.rule=Host(`light.local`)"
+      - "traefik.http.routers.lighthouse.entrypoints=web"
+    depends_on:
+      - traefik
 
-  www:
-    image: nginx
-    volumes: 
-      - ./apps/home/:/usr/share/nginx/html
+  #
+  # home: login and consent app, implements oauth 2
+  #
+  home:
+    build: ./apps/apm-ssr/
+    user: node
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "4000:4000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.home.rule=Host(`home.local`)"
+      - "traefik.http.routers.home.entrypoints=web"
     environment:
-      - VIRTUAL_HOST=home.local
+      - APM_SERVER=apm.local
+      - HYDRA_CLIENT_ID
+      - HYDRA_CLIENT_SECRET
+      - HYDRA_URL=auth.local
+
+  #
+  # ldap database
+  #
+  # openldap: https://www.openldap.org
+  #
+  whois:
+    image: osixia/openldap
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./apps/whois/config/:/usr/share/nginx
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whois.rule=Host(`whois.local`)"
+      - "traefik.http.routers.whois.entrypoints=web"
+    environment:
+      - VIRTUAL_HOST=whois.local
+
+  #
+  # oauth2 provider
+  # https://www.ory.sh/run-oauth2-server-open-source-api-security/
+  # 
+  hydra:
+    image: oryd/hydra:v1.4.2
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - SECRETS_SYSTEM=${SECRETS_SYSTEM}
+      - DSN=$DSN
+      - URLS_SELF_ISSUER=http://127.0.0.1:9000/
+      - URLS_CONSENT=http://127.0.0.1:4200/consent
+      - URLS_LOGIN=http://127.0.0.1:9020/login
+    ports: 
+      - 7000:4444
+      - 7001:4445
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=Host(`auth.local`)"
+      - "traefik.http.routers.auth.entrypoints=web"
 
 networks:
-
   elk:
     driver: bridge
   public:
+    drone:

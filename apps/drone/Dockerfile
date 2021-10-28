@@ -1,2 +1,2 @@
-FROM drone/drone:1
+FROM drone/drone
 

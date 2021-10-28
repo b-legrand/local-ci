@@ -2,7 +2,7 @@
 
 Local pic to test Jenkinsfiles.
 
-This is a small continuous integration platform based on gitea + jenkins + sonarqube + nexus
+This is a small continuous integration platform based on gitea + drone + sonarqube + nexus
 
 ## How to Install
 
@@ -14,12 +14,13 @@ This is a small continuous integration platform based on gitea + jenkins + sonar
 
 Edit your /etc/hosts file::
 
-    127.0.0.1 jenkins.local
+    127.0.0.1 drone.local
     127.0.0.1 nexus.local
-    127.0.0.1 verdaccio.local
+    127.0.0.1 sonar.local
+    127.0.0.1 light.local
     127.0.0.1 sonar.local
     127.0.0.1 gitea.local
-    127.0.0.1 adminer.local
+    127.0.0.1 admin.local
 
 #### 2.bis requirement for images
 
@@ -47,7 +48,7 @@ ulimit -u 8192
 
 ## Usage
 
-Launch gogs + nexus + sonarqube + jenkins locally.
+Launch gitea + nexus + sonarqube + drone locally.
 
     docker-compose start
 
