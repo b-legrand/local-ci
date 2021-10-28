@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ConsentPageComponent } from './consent-page.component';
 
@@ -6,7 +6,7 @@ describe('ConsentPageComponent', () => {
   let component: ConsentPageComponent;
   let fixture: ComponentFixture<ConsentPageComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ ConsentPageComponent ]
     })

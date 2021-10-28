@@ -55,6 +55,7 @@ const routes: Routes = [];
         useHash: false,
         enableTracing: false,
         initialNavigation: 'enabled',
+        relativeLinkResolution: 'legacy'
       }
     ),
   ],

@@ -8,7 +8,7 @@ import { StateTransferInitializerModule } from '@nguniversal/common';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { SharedModule } from './shared/shared.module';
-import { NgxLocalStorageModule } from 'ngx-localstorage';
+// import { NgxLocalStorageModule } from 'ngx-localstorage';
 import { NgxPopperModule } from "ngx-popper";
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 @NgModule({
@@ -20,7 +20,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
     // StateTransferInitializerModule,
     AppRoutingModule,
     FontAwesomeModule,
-    NgxLocalStorageModule.forRoot(),
+    // NgxLocalStorageModule.forRoot(),
     NgxPopperModule.forRoot({showDelay: 300}),
     SharedModule,
   ],
