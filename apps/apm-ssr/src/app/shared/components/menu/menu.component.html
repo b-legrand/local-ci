@@ -1,0 +1,36 @@
+<nav
+    class="menu-items"
+    [ngClass]="{'opened': opened}"
+    (blur)="closeMenu()"
+    [@menuItems]="opened"
+    (@menuItems.start)="isAnimating.next(true)"
+    (@menuItems.done)="isAnimating.next(false)"
+>
+    <a
+        (click)="toggleMenu()"
+        (focus)="openMenu()"
+        [matTooltip]="hamburger.label"
+        [matTooltipPosition]="'right'"
+        class="menu-item menu-item-0"
+    >
+        <fa-icon [icon]="hamburger.icon"></fa-icon>
+    </a>
+    <ng-container *ngIf="opened"><span [@childWaiter]></span>
+        <a
+            *ngFor="let item of items; index as i"
+            [@menuItem]="item.state"
+            class="menu-item menu-item-{{ i+1 }}"
+            [href]="item.link"
+            target="inFrame"
+            [matTooltip]="item.label"
+            [matTooltipPosition]="'right'"
+            [attr.aria-label]=" item.label"
+        >
+            <fa-icon
+                [fixedWidth]="true"
+                [size]="32"
+                [icon]="item.icon"
+            ></fa-icon>
+        </a>
+    </ng-container>
+</nav>
