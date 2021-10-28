@@ -1,0 +1,10 @@
+{
+    "/apm": {
+      "target": "http://localhost:8200",
+      "secure": false,
+      "pathRewrite": {
+        "^/apm": ""
+      },
+      "changeOrigin": true
+    }
+  }

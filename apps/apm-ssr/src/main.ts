@@ -1,3 +1,8 @@
+
+import { apm } from '@elastic/apm-rum/dist/lib';
+
+apm.init({serviceName: "apm-poc-web", serverUrl: "http://localhost:4200/apm/"});
+
 import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 

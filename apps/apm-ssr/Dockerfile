@@ -1,12 +1,18 @@
+FROM store/elastic/filebeat:7.8.1 as filebeat
+
 FROM node:14 as builder
 
 WORKDIR /opt/apm-ssr
 
-RUN copy ./src .
+EXPOSE 4000
 
-RUN npm i --quiet
+COPY package.json .
+COPY package-lock.json .
 
-RUN npm run build:ssr 
+RUN npm ci --quiet
+# copy sources
+COPY . .
 
-CMD npm run serve
+RUN npm run build:ssr
 
+CMD ["node", "dist/apm-ssr/server/main.js"]

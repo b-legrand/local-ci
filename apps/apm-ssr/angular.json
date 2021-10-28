@@ -30,7 +30,15 @@
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "error-stack-parser",
+              "@elastic/apm-rum-core",
+              "@elastic/apm-rum",
+              "opentracing/lib/tracer",
+              "opentracing/lib/span",
+              "stackframe"
+            ]
           },
           "configurations": {
             "production": {
@@ -171,6 +179,7 @@
           }
         }
       }
-    }},
+    }
+  },
   "defaultProject": "apm-ssr"
 }
