@@ -2,6 +2,8 @@ import 'zone.js/dist/zone-node';
 
 import { ngExpressEngine } from '@nguniversal/express-engine';
 import * as express from 'express';
+import * as compression from 'compression';
+import * as helmet from 'helmet';
 import { join } from 'path';
 
 import { AppServerModule } from './src/main.server';
@@ -12,7 +14,11 @@ import { existsSync } from 'fs';
 export function app(): express.Express {
   const server = express();
   const distFolder = join(process.cwd(), 'dist/apm-ssr/browser');
-  const indexHtml = existsSync(join(distFolder, 'index.original.html')) ? 'index.original.html' : 'index';
+  const indexHtml = existsSync(join(distFolder, 'index.original.html'))
+    ? 'index.original.html'
+    : 'index';
+  server.use(compression());
+  server.use(helmet());
 
   // Our Universal express-engine (found @ https://github.com/angular/universal/tree/master/modules/express-engine)
   server.engine('html', ngExpressEngine({
