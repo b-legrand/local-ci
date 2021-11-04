@@ -240,7 +240,6 @@ services:
     restart: always
     ports:
       - 8083:8080
-    environment:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.lighthouse.rule=Host(`admin.local`)"
@@ -353,4 +352,4 @@ networks:
   elk:
     driver: bridge
   public:
-    drone:
+  drone:
