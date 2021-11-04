@@ -171,9 +171,21 @@
           "configurations": {
             "production": {}
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
         }
       }
     }
   },
-  "defaultProject": "apm-ssr"
+  "defaultProject": "apm-ssr",
+  "cli": {
+    "defaultCollection": "@angular-eslint/schematics"
+  }
 }
