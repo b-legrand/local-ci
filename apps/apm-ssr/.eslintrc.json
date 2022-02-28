@@ -1,21 +1,17 @@
 {
   "root": true,
-  "ignorePatterns": [
-    "projects/**/*"
-  ],
+  "ignorePatterns": ["projects/**/*"],
   "overrides": [
     {
-      "files": [
-        "*.ts"
-      ],
+      "files": ["*.ts"],
       "parserOptions": {
-        "project": [
-          "tsconfig.json",
-          "e2e/tsconfig.json"
-        ],
+        "project": ["tsconfig.json", "tsconfig.app.json", "e2e/tsconfig.json"],
         "createDefaultProgram": true
       },
       "extends": [
+        "plugin:@typescript-eslint/recommended",
+        "plugin:import/typescript",
+        "prettier",
         "plugin:@angular-eslint/recommended",
         "plugin:@angular-eslint/template/process-inline-templates"
       ],
@@ -35,16 +31,26 @@
             "prefix": "app",
             "style": "kebab-case"
           }
-        ]
+        ],
+        "prefer-const": "warn",
+        "prefer-template": "warn",
+        "spaced-comment": ["warn", "always", { "exceptions": ["-", "+"] }]
       }
     },
     {
-      "files": [
-        "*.html"
-      ],
-      "extends": [
-        "plugin:@angular-eslint/template/recommended"
-      ],
+      "files": ["*.spec.ts"],
+      "plugins": ["jest"],
+      "rules": {
+        "jest/no-disabled-tests": "warn",
+        "jest/no-focused-tests": "error",
+        "jest/no-identical-title": "error",
+        "jest/prefer-to-have-length": "warn",
+        "jest/valid-expect": "error"
+      }
+    },
+    {
+      "files": ["*.html"],
+      "extends": ["plugin:@angular-eslint/template/recommended"],
       "rules": {}
     }
   ]

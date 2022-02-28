@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import {
   trigger,
   transition,
@@ -76,7 +76,7 @@ interface Link {
     ]),
   ],
 })
-export class MenuComponent implements OnInit {
+export class MenuComponent {
   public opened = false;
   public isAnimating: Subject<boolean> = new BehaviorSubject<boolean>(false);
   hamburger: Link = {
@@ -135,9 +135,7 @@ export class MenuComponent implements OnInit {
       icon: faCoffee,
     },
   ];
-  constructor() {}
 
-  ngOnInit(): void {}
   toggleMenu(): void {
     const animateDone$ = this.isAnimating.pipe(
       filter((value) => value === false)
