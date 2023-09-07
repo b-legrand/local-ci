@@ -10,6 +10,7 @@ data/gitea/sessions
 data/sonar/data
 data/sonar/extensions
 logs/*.log
+data/lhci/*
 
 apps/drone/data
 apps/gitea/data

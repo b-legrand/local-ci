@@ -21,7 +21,11 @@ Edit your /etc/hosts file::
     127.0.0.1 sonar.local
     127.0.0.1 gitea.local
     127.0.0.1 admin.local
-
+    127.0.0.1 super.local
+    127.0.0.1 apm.local
+    127.0.0.1 home.local
+    127.0.0.1 whois.local
+    127.0.0.1 auth.local
 #### 2.bis requirement for images
 
 If you encounter the following issue:
